@@ -1,0 +1,10 @@
+mm9
+↳
+  mm39.1.bt2
+  mm39.2.bt2
+  mm39.3.bt2
+  mm39.4.bt2
+  mm39.fa.gz
+  mm39.fai
+  mm39.rev.1.bt2
+  mm39.rev.2.bt2
