@@ -43,35 +43,28 @@ def get_topmost_directory(path):
 def align_fastq(fastq_file, genome_file, aligner_path, output_prefix):
     """Align FASTQ to produce a SAM file."""
     sam_file = output_prefix + ".sam"
-    run_command(f"{aligner_path} -x {genome_file} -U {fastq_file} -S {sam_file}")
+    run_command(f"{aligner_path} -x {genome_file} -U {fastq_file} -S {sam_file} -p 10")
     return sam_file
 
 def sam_to_bam(sam_file, output_prefix):
     """Convert SAM to sorted BAM."""
     bam_file = output_prefix + ".sorted.bam"
-    run_command(f"samtools view -Sb {sam_file} | samtools sort -o {bam_file}")
+    run_command(f"samtools view -@ 10 -Sb {sam_file} | samtools sort -@ 10 -o {bam_file}")
     return bam_file
 
 def generate_bedgraph(bam_file, genome_file, output_prefix):
-    """Generate BedGraph from BAM and sort it."""
-    unsorted_bedgraph_file = output_prefix + ".unsorted.bedgraph"
+    """Generate sorted BedGraph from BAM."""
     bedgraph_file = output_prefix + ".bedgraph"
-    run_command(f"bedtools genomecov -bg -ibam {bam_file} -g {genome_file} > {unsorted_bedgraph_file}")
-    run_command(f"LC_COLLATE=C sort -k1,1 -k2,2n {unsorted_bedgraph_file} > {bedgraph_file}")
+    run_command(f"bedtools genomecov -bg -ibam {bam_file} -g {genome_file} | LC_COLLATE=C sort -k1,1 -k2,2n --parallel=10 > {bedgraph_file}")
     return bedgraph_file
 
 def bedgraph_to_bigwig(bedgraph_file, genome_file, output_prefix):
     """Convert BedGraph to BigWig."""
-    # print("1\n ")
     chrom_sizes_file = os.path.join(get_topmost_directory(output_prefix), "chrom.sizes")
     print(chrom_sizes_file)
-    # print("2\n")
     run_command(f"cut -f1,2 {genome_file}.fai > {chrom_sizes_file}")
-    # print("3\n")
     bigwig_file = output_prefix + ".bw" 
-    # print("4\n")
     run_command(f"bedGraphToBigWig {bedgraph_file} {chrom_sizes_file} {bigwig_file}")
-    # print("5\n")
     return bigwig_file
 
 def fastq_to_bigwig(fastq_file, genome_file, aligner_path):
@@ -91,10 +84,7 @@ def main():
     parser.add_argument("genome_file", help="Path to the genome file.")
     parser.add_argument("aligner_path", help="Path to the aligner executable.")
     args = parser.parse_args()
-    # Use "bowtie2" for alignment 
     fastq_to_bigwig(args.fastq_file, args.genome_file, args.aligner_path)
-    # E.g. usage: 
-    # python fastq_to_bigwig.py SRR20082645.fastq.gz resources/mm39/mm39 bowtie2
 
 if __name__ == "__main__":
     main()
