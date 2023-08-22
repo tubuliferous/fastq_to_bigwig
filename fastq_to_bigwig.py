@@ -90,4 +90,4 @@ def main():
 if __name__ == "__main__":
     main()
 
-# e.g. usage: python fastq_to_bigwig.py SRR20082645.fastq.gz resources/mm39/mm39 bowtie2  10
+# e.g. usage: python fastq_to_bigwig.py SRR20082645.fastq.gz resources/mm39/mm39 bowtie2 --cores 10
