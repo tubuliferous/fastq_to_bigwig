@@ -78,14 +78,29 @@ def fastq_to_bigwig(fastq_file, genome_file, aligner_path, cores):
     bigwig_file = bedgraph_to_bigwig(bedgraph_file, genome_file, output_prefix)
     print(f"Done! BigWig file generated at: {bigwig_file}")
 
+def download_and_convert_srr(srr_accession):
+    """Download the given SRR accession using prefetch and convert to FASTQ."""
+    run_command(f"prefetch {srr_accession}")
+    fastq_file = f"{srr_accession}.fastq"
+    run_command(f"fastq-dump --split-files --gzip {srr_accession} --outfile {fastq_file}")
+    return fastq_file
+
 def main():
-    parser = argparse.ArgumentParser(description="Convert FASTQ to BigWig.")
-    parser.add_argument("fastq_file", help="Path to the FASTQ file.")
+    parser = argparse.ArgumentParser(description="Convert FASTQ or SRR to BigWig.")
+    parser.add_argument("file_or_accession", help="Path to the FASTQ file or SRR accession.")
     parser.add_argument("genome_file", help="Path to the genome file.")
     parser.add_argument("aligner_path", help="Path to the aligner executable.")
     parser.add_argument("--cores", type=int, default=1, help="Number of cores to use for processing. Default is 1.")
     args = parser.parse_args()
-    fastq_to_bigwig(args.fastq_file, args.genome_file, args.aligner_path, args.cores)
+    
+    # Check if the provided file_or_accession is an SRR accession or a FASTQ file
+    if ".fastq" in args.file_or_accession:
+        fastq_file = args.file_or_accession
+    else:
+        print(f"Given input {args.file_or_accession} is treated as an SRR accession. Downloading and converting...")
+        fastq_file = download_and_convert_srr(args.file_or_accession)
+
+    fastq_to_bigwig(fastq_file, args.genome_file, args.aligner_path, args.cores)
 
 if __name__ == "__main__":
     main()
