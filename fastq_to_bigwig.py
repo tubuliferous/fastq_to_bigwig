@@ -80,9 +80,11 @@ def fastq_to_bigwig(fastq_file, genome_file, aligner_path, cores):
 
 def download_and_convert_srr(srr_accession):
     """Download the given SRR accession using prefetch and convert to FASTQ."""
+    print(f"  -> Downloading {srr_accession}.sra")
     run_command(f"prefetch {srr_accession}")
-    fastq_file = f"{srr_accession}.fastq"
-    run_command(f"fastq-dump --split-files --gzip {srr_accession} --outfile {fastq_file}")
+    fastq_file = f"{srr_accession}_1.fastq.gz"
+    print(f"  -> Convert {srr_accession}.sra to FASTQ")
+    run_command(f"fastq-dump --split-files -Z {srr_accession} | gzip > {fastq_file}")
     return fastq_file
 
 def main():
